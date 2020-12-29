@@ -15,7 +15,7 @@ public:
 	ADPCM();
 	~ADPCM();
 	int load();
-	bool save(fstream& file);
+	int save(std::fstream& file);
 };
 
 #endif // !ADPCM_H
