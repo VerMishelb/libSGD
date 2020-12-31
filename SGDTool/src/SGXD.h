@@ -39,7 +39,7 @@ public:
 	//Saves current file as [path] with or without hash. If hash was not defined, default_hash is used.
 	int save(std::string file);
 	//Saves [file_index]th subfile to [path] folder with [frequency] playback rate. Use [name] to override default name, stated in NAME header.
-	int extract(std::string path, uint32_t frequency = 0, int file_index = -1, std::string name = "");
+	int extract(std::string path_folder, uint32_t frequency = 0, int file_index = -1, std::string name = "");
 	//Prints important and not important stuff.
 	void printInfo();
 	//Updates offsets and sizes based on known information.

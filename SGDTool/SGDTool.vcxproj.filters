@@ -15,24 +15,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SGXD.h">
+    <ClInclude Include="src\ADPCM.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="ATRAC.h">
+    <ClInclude Include="src\ATRAC.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="ADPCM.h">
+    <ClInclude Include="src\SGXD.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SGXD.cpp">
+    <ClCompile Include="src\ADPCM.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="ATRAC.cpp">
+    <ClCompile Include="src\ATRAC.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="ADPCM.cpp">
+    <ClCompile Include="src\SGXD.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

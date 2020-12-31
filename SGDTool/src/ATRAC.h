@@ -6,12 +6,16 @@
 #include <string>
 #include <iostream>
 #include <direct.h>
+#include <algorithm>
 
 class ATRAC {
 public:
 	enum ErrorCode {
 		OK,
-		FileCantOpen
+		FileCantOpen,
+		FileCantCreate,
+		DataIncorrect,
+		NameMissing
 	};
 	ATRAC();
 	~ATRAC();
@@ -59,6 +63,11 @@ public:
 		uint16_t file_index = 0;
 		uint16_t name_type = 0xFF00;//0x0000 - container name (no index), 0x2000 - ADPCM name, 0x3000 - ATRAC3+ name.
 		uint32_t name_offset = 0;
+
+		//For sorting
+		bool operator< (const NAME_block_s& a) const {
+			return name_offset < a.name_offset;
+		}
 	};
 	std::vector<ATRAC::NAME_block_s> NAME_block;
 	std::vector<std::string> names_vec;//0 is always container name, 1 is the one with 0th index, 2 is the one with 1 index etc

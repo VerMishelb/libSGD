@@ -32,12 +32,16 @@ string hex_int_str(uint32_t a) {
 
 string short_path(string path) {
 	vector<string> line;
+	char separator = '/';
+	//Windows case
+	if (path.find('\\') != string::npos)
+		separator = '\\';
 	string token;
 	istringstream iss(path);
-	while (getline(iss, token, '\\'))
+	while (getline(iss, token, separator))
 		line.push_back(token);
 	if (line.size() > 5)
-		return (line[0] + '\\' + line[1] + "\\...\\" + line[line.size() - 2] + '\\' + line[line.size() - 1]);
+		return (line[0] + separator + line[1] + separator + "..." + separator + line[line.size() - 2] + separator + line[line.size() - 1]);
 	else
 		return path;
 }

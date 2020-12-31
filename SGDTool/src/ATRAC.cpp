@@ -83,7 +83,7 @@ int ATRAC::load(ifstream& file) {
 	file.seekg(data_offset);
 	data.clear();
 	data.resize(WAVE_block.data_size);
-	file.read(reinterpret_cast<char*>(&data[0]), WAVE_block.data_size);
+	file.read(reinterpret_cast<char*>(data.data()), WAVE_block.data_size);
 
 	//Hash
 	hash_exists = true;
@@ -102,7 +102,7 @@ int ATRAC::load(ifstream& file) {
 		hash.clear();
 		hash.resize(0x30);
 		file.seekg(-0x30, ios::end);
-		file.read(reinterpret_cast<char*>(&hash[0]), 0x30);
+		file.read(reinterpret_cast<char*>(hash.data()), 0x30);
 	}
 
 	return ErrorCode::OK;
@@ -132,12 +132,13 @@ int ATRAC::extract(string path, uint32_t frequency, string name) {
 		cout << "Can't extract to " << path << '/' << name << '\n';
 		file.clear();
 		file.close();
-		return ErrorCode::FileCantOpen;
+		return ErrorCode::FileCantCreate;
 	}
 
-	file.write(reinterpret_cast<char*>(&data[0]), data.size());
+	file.write(reinterpret_cast<char*>(data.data()), data.size());
 	file.seekp(0x18);
 
+	//By default extract file with playback frequency
 	if (frequency == 0) {
 		frequency = WAVE_block.playback_frequency;
 	}
@@ -149,6 +150,7 @@ int ATRAC::extract(string path, uint32_t frequency, string name) {
 
 
 int ATRAC::setData(std::vector<uint8_t> v_data) {
+	int return_val = ErrorCode::OK;
 	data = v_data;
 	uint32_t samples = 0;
 	for (int i = 0; i < 0x200; i+=4) {
@@ -163,8 +165,11 @@ int ATRAC::setData(std::vector<uint8_t> v_data) {
 	if (samples != 0) {
 		WAVE_block.total_samples = samples;
 	}
+	else {
+		return_val = ErrorCode::DataIncorrect;
+	}
 	updateOffsets();
-	return ErrorCode::OK;
+	return return_val;
 }
 
 
@@ -204,18 +209,6 @@ int ATRAC::save(fstream& file) {
 
 	while (file.tellp() % 0x10 != 0)
 		file.put(0);
-	//Go back and write WAVE size
-	/*file.seekp(WAVE_offs + 8);
-	for (uint32_t counter = 0; ; counter += 4) {
-		char code[4];
-		file.read(code, sizeof(uint32_t));
-		if (strcmp(code, "NAME") == 0) {
-			WAVE_size = counter;
-			break;
-		}
-	}
-	file.seekp(WAVE_offs + 4);
-	file.write(reinterpret_cast<char*>(&WAVE_size), sizeof(uint32_t));*/
 
 	//NAME
 	file.seekp(WAVE_offs + WAVE_size + 0x8);
@@ -226,9 +219,16 @@ int ATRAC::save(fstream& file) {
 		file.put(0);
 	file.write(reinterpret_cast<char*>(&names_amount), sizeof(uint32_t));
 
-	//DON'T FORGET TO SORT NAME BLOCKS BY ADDRESSES [NOT done]
+	//DON'T FORGET TO SORT NAME BLOCKS BY ADDRESSES [done, but includes <algorhithm> only for this]
+	std::vector<NAME_block_s>* NAME_block_temp = new std::vector<NAME_block_s>;
+	*NAME_block_temp = NAME_block;
+	std::sort(NAME_block_temp->begin(), NAME_block_temp->end());
 
-	file.write(reinterpret_cast<char*>(&NAME_block[0]), sizeof(NAME_block_s) * uint32_t(NAME_block.size()));
+	file.write(reinterpret_cast<char*>(NAME_block_temp->data()), sizeof(NAME_block_s) * NAME_block_temp->size());
+	//file.write(reinterpret_cast<char*>(&NAME_block[0]), sizeof(NAME_block_s) * uint32_t(NAME_block.size()));
+
+	delete NAME_block_temp;
+
 
 	for (uint32_t i = 0; i < names_vec.size(); i++) {
 		file.write(names_vec[i].c_str(), names_vec[i].size());
@@ -238,7 +238,7 @@ int ATRAC::save(fstream& file) {
 		file.put(0);
 
 	//Data block
-	file.write(reinterpret_cast<char*>(&data[0]), data.size());
+	file.write(reinterpret_cast<char*>(data.data()), data.size());
 
 	//Hash
 	if (hash_exists) {
@@ -248,11 +248,10 @@ int ATRAC::save(fstream& file) {
 			file.write((char*)default_hash, 0x30);
 		}
 		else {
-			file.write(reinterpret_cast<char*>(&hash[0]), 0x30);
+			file.write(reinterpret_cast<char*>(hash.data()), 0x30);
 		}
-		file.seekp(-0x30, ios::end);
-		uint32_t hash_offset = file.tellp();
 		file.seekp(-0x28, ios::end);
+		uint32_t hash_offset = uint32_t(file.tellp()) - 8;
 		file.write(reinterpret_cast<char*>(&hash_offset), sizeof(uint32_t));
 	}
 	//ADD LOAD FUNCTION
