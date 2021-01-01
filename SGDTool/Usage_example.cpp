@@ -35,8 +35,5 @@ int main() {
 	myfile.updateOffsets();
 
 	myfile.save("D:\\VSProjects\\libSGD tests\\LibSGD tests\\test_files\\create\\result.sgd");
-	//Broken:
-	//0x4 File name offset (aka container name). 32 bit
-	//0x8 First subfile offset(RIFF). 32 bit
 	return 0;
 }
