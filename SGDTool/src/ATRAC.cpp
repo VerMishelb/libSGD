@@ -65,7 +65,7 @@ int ATRAC::load(ifstream& file) {
 	}
 
 	for (uint32_t i = 0; i < names_amount; i++) {
-		file.seekg(0x70 + 0x8 * i);
+		file.seekg(0x70 + 0x8 * uint64_t(i));
 		file.read(reinterpret_cast<char*>(&NAME_block[i].file_index), sizeof(uint16_t));
 		file.read(reinterpret_cast<char*>(&NAME_block[i].name_type), sizeof(uint16_t));
 		file.read(reinterpret_cast<char*>(&NAME_block[i].name_offset), sizeof(uint16_t));
@@ -149,15 +149,15 @@ int ATRAC::extract(string path, uint32_t frequency, string name) {
 }
 
 
-int ATRAC::setData(std::vector<uint8_t> v_data) {
+int ATRAC::setData(std::vector<uint8_t>& v_data) {
 	int return_val = ErrorCode::OK;
 	data = v_data;
 	uint32_t samples = 0;
-	for (int i = 0; i < 0x200; i+=4) {
+	for (int i = 0; i < 0x200; i += 4) {
 		memcpy(&samples, &v_data[i], 4);
 		//"fact"
 		if (samples == 0x74636166) {
-			memcpy(&samples, &v_data[i+8], 4);
+			memcpy(&samples, &v_data[i + 8], 4);
 			break;
 		}
 		samples = 0;
@@ -211,7 +211,7 @@ int ATRAC::save(fstream& file) {
 		file.put(0);
 
 	//NAME
-	file.seekp(WAVE_offs + WAVE_size + 0x8);
+	file.seekp(uint64_t(WAVE_offs) + uint64_t(WAVE_size) + 0x8);
 	uint32_t NAME_offs = file.tellp();
 	file.write("NAME", sizeof(uint32_t));
 	file.write(reinterpret_cast<char*>(&NAME_size), sizeof(uint32_t));
@@ -221,10 +221,10 @@ int ATRAC::save(fstream& file) {
 
 	//DON'T FORGET TO SORT NAME BLOCKS BY ADDRESSES [done, but includes <algorhithm> only for this]
 	std::vector<NAME_block_s>* NAME_block_temp = new std::vector<NAME_block_s>;
-	*NAME_block_temp = NAME_block;
+	*NAME_block_temp = this->NAME_block;
 	std::sort(NAME_block_temp->begin(), NAME_block_temp->end());
 
-	file.write(reinterpret_cast<char*>(NAME_block_temp->data()), sizeof(NAME_block_s) * NAME_block_temp->size());
+	file.write(reinterpret_cast<char*>(NAME_block_temp->data()), sizeof(NAME_block_s) * uint64_t(NAME_block_temp->size()));
 	//file.write(reinterpret_cast<char*>(&NAME_block[0]), sizeof(NAME_block_s) * uint32_t(NAME_block.size()));
 
 	delete NAME_block_temp;
@@ -254,7 +254,6 @@ int ATRAC::save(fstream& file) {
 		uint32_t hash_offset = uint32_t(file.tellp()) - 8;
 		file.write(reinterpret_cast<char*>(&hash_offset), sizeof(uint32_t));
 	}
-	//ADD LOAD FUNCTION
 
 	return ErrorCode::OK;
 }
@@ -276,6 +275,9 @@ void ATRAC::updateOffsets() {
 	temp_offset = 0x10 + 8 + WAVE_size + 8 + NAME_size;
 	for (uint32_t i = 0; i < names_amount; i++) {
 		NAME_block[i].name_offset = temp_offset;
+		if (i > 0) {
+			WAVE_block.name_offset = temp_offset;
+		}
 		temp_offset += names_vec[i].size() + 1;
 		//+1 for null byte
 		NAME_size += names_vec[i].size() + 1;
@@ -294,27 +296,28 @@ void ATRAC::updateOffsets() {
 }
 
 
-void ATRAC::addName(string s, bool is_container_name) {
-	names_amount++;
-	names_vec.push_back(s);
-	NAME_block_s tmp_block;
+void ATRAC::setName(string s, bool is_container_name) {
+	//If there is no name yet, make both container and subfile name the same to avoid issue I've met when testing stuff
+
+	if (names_amount != 2) {
+		names_amount = 2;
+		names_vec.clear();
+		names_vec.resize(names_amount, s);
+		this->NAME_block.resize(names_amount);
+		this->NAME_block[0].file_index = 0;
+		this->NAME_block[0].name_type = 0;
+		this->NAME_block[1].file_index = 0;
+		this->NAME_block[1].name_type = 0x3000;
+		updateOffsets();
+		return;
+	}
 
 	if (is_container_name) {
-		tmp_block.name_type = 0;
-		tmp_block.file_index = 0;
+		names_vec[0] = s;
 	}
 	else {
-		tmp_block.name_type = 0x3000;
-		tmp_block.file_index = names_amount - 1;
+		names_vec[1] = s;
 	}
-	//DON'T TOUCH, IT WORKS. JUST SWAP TO RELEASE/DEBUG AND BACKWARDS, INTELLISENSE ERROR WILL DISAPPEAR
-	NAME_block.push_back(tmp_block);
-	updateOffsets();
-}
-
-
-void ATRAC::editName(int index, string ass) {
-	names_vec[index] = ass;
 	updateOffsets();
 }
 

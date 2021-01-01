@@ -24,13 +24,12 @@ public:
 	int extract(std::string path, uint32_t frequency, std::string name);
 
 	//Sets new data and calls updateOffsets() because doing this manually is annoying. You can also don't touch offsets and edit data manually as everything is public
-	int setData(std::vector<uint8_t> v_data);
+	int setData(std::vector<uint8_t>& v_data);
 	int save(std::fstream& file);
 	void updateOffsets();
 
 	//for creating/editing SGXD
-	void addName(std::string s, bool is_container_name = false);
-	void editName(int index, std::string s);
+	void setName(std::string s, bool is_container_name = false);
 
 	//"WAVE"
 	uint32_t WAVE_size = 0;

@@ -7,6 +7,7 @@ SGXD::~SGXD() {}
 
 
 //Help functions
+//Find the way to get rid of read_string2() and use read_string() instead
 string read_string2(ifstream& a) {
 	string result;
 	uint8_t t = a.get();
@@ -112,7 +113,19 @@ int SGXD::load(std::string file) {
 }
 
 
-int SGXD::create(SGXD::FileType type) {
+int SGXD::create(SGXD::FileType type_p) {
+	type = type_p;
+	if (type_p == SGXD::FileType::ATRACType) {
+		atrac.files_amount = 1;
+		atrac.WAVE_block.file_format = 0x04;
+		atrac.WAVE_block.channels = 2;
+		atrac.WAVE_block.playback_frequency = 44100;
+		atrac.WAVE_block.bitrate = 0x40;
+		atrac.hash_exists = false;
+	}
+	else if (type_p == SGXD::FileType::ADPCMType) {
+		std::cout << "ADPCM part is not finished.\n";
+	}
 	return 0;
 }
 
@@ -198,16 +211,9 @@ void SGXD::setHash(bool val) {
 //Important stuff
 void SGXD::setContainerName(string s) {
 	sgd_name = s;
-	if (type == 0) {
-		for (uint32_t i = 0; i < atrac.names_amount; i++) {
-			if (atrac.NAME_block[i].name_type == 0) {
-				atrac.names_vec[i] = s;
-				updateOffsets();
-				return;
-			}
-		}
-		//In case there is no container name in the file yet, add it
-		atrac.addName(s, true);
+	if (type == FileType::ATRACType) {
+		atrac.setName(s, true);
+		updateOffsets();
 	}
 	/*else if (type == 1) {
 		for (int i = 0; i < adpcm.names_amount; i++) {
