@@ -21,7 +21,7 @@ public:
 	~ATRAC();
 
 	int load(std::ifstream& file);
-	int extract(std::string path, uint32_t frequency, std::string name);
+	int extract(std::string path_folder, uint32_t frequency, std::string name);
 
 	//Sets new data and calls updateOffsets() because doing this manually is annoying. You can also don't touch offsets and edit data manually as everything is public
 	int setData(std::vector<uint8_t>& v_data);

@@ -29,16 +29,27 @@ public:
 	SGXD();
 	~SGXD();
 
+	/////////////
+	//FUNCTIONS
+	/////////////
 
-	//Main functions
-
+	
 	//Initialize values with ones from file.
+	//file - Absolute path to .sgd file
 	int load(std::string file);
-	//Initializes standard values for given type. You must call setData() and atrac.addName() after that.
+
+	//Initializes standard values for given type. You must call setData() and atrac/adpcm.addName() after that.
 	int create(SGXD::FileType type = SGXD::FileType::ATRACType);
-	//Saves current file as [path] with or without hash. If hash was not defined, default_hash is used.
+	//Saves current file as [path]. If hash was not defined but required, default_hash is used.
 	int save(std::string file);
 	//Saves [file_index]th subfile to [path] folder with [frequency] playback rate. Use [name] to override default name, stated in NAME header.
+
+
+	//Saves [file_index]th subfile to [path_fodler] with [frequency] playback rate. Use [name] to override default name, stated in NAME header.
+	//path_folder - Absolute path where the container name folder will be created (path_folder/sgd_name/[n1.vag, n2.vag...]).
+	//frequency - Playback frequency to extract with. If 0, gets value automatically.
+	//file_index - Subfile index, 0 is the first subfile. If -1, all files will be extracted.
+	//name - Override original file name with this (../myname.wav). [ATRAC ONLY]
 	int extract(std::string path_folder, uint32_t frequency = 0, int file_index = -1, std::string name = "");
 	//Prints important and not important stuff.
 	void printInfo();
