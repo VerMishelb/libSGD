@@ -2,28 +2,10 @@
 
 using namespace std;
 
-ATRAC::ATRAC() {}
-ATRAC::~ATRAC() {}
+libSGD::ATRAC::ATRAC() {}
+libSGD::ATRAC::~ATRAC() {}
 
-
-//Help functions
-string read_string(ifstream& a) {
-	string result;
-	uint8_t t = a.get();
-
-	//Protection from yeeting into space
-	for (int length = 0; t != 0 && length < 0xff; length++) {
-		if (t == '\0') {
-			return result;
-		}
-		result += t;
-		t = a.get();
-	}
-	return result;
-}
-
-
-int ATRAC::load(ifstream& file) {
+int libSGD::ATRAC::load(ifstream& file) {
 	uint32_t value = 0;
 
 	//WAVE
@@ -43,7 +25,8 @@ int ATRAC::load(ifstream& file) {
 	file.read(reinterpret_cast<char*>(&WAVE_block.data_size), sizeof(uint32_t));
 	file.seekg(0x40);
 	file.read(reinterpret_cast<char*>(&WAVE_block.total_samples), sizeof(uint32_t));
-	file.seekg(0x4C);
+	file.read(reinterpret_cast<char*>(&WAVE_block.loop_beg), sizeof(uint32_t));
+	file.read(reinterpret_cast<char*>(&WAVE_block.loop_end), sizeof(uint32_t));
 	file.read(reinterpret_cast<char*>(&value), sizeof(uint32_t));
 	if (value != WAVE_block.data_size) {
 		std::cout << "WARNING: Data size differs.\n";
@@ -72,10 +55,10 @@ int ATRAC::load(ifstream& file) {
 
 		file.seekg(NAME_block[i].name_offset);
 		if (NAME_block[i].name_type == 0) {
-			names_vec[0] = read_string(file);
+			names_vec[0] = libSGD::read_string(file);
 		}
 		else {
-			names_vec[NAME_block[i].file_index + 1] = read_string(file);
+			names_vec[NAME_block[i].file_index + 1] = libSGD::read_string(file);
 		}
 	}
 
@@ -109,7 +92,7 @@ int ATRAC::load(ifstream& file) {
 }
 
 
-int ATRAC::extract(string path, uint32_t frequency, string name) {
+int libSGD::ATRAC::extract(string path, uint32_t frequency, string name) {
 	if (name == "") {
 		if (names_vec.size() < 2) {
 			name = "unknown.wav";
@@ -149,7 +132,7 @@ int ATRAC::extract(string path, uint32_t frequency, string name) {
 }
 
 
-int ATRAC::setData(std::vector<uint8_t>& v_data) {
+int libSGD::ATRAC::setData(std::vector<uint8_t>& v_data) {
 	int return_val = ErrorCode::OK;
 	data = v_data;
 	uint32_t samples = 0;
@@ -173,7 +156,7 @@ int ATRAC::setData(std::vector<uint8_t>& v_data) {
 }
 
 
-int ATRAC::save(fstream& file) {
+int libSGD::ATRAC::save(fstream& file) {
 	//WAVE
 	uint32_t WAVE_offs = file.tellp();
 	file.write("WAVE", sizeof(uint32_t));
@@ -200,8 +183,8 @@ int ATRAC::save(fstream& file) {
 	for (int i = 0; i < 4; i++)
 		file.put(0);
 	file.write(reinterpret_cast<char*>(&WAVE_block.total_samples), sizeof(uint32_t));
-	for (int i = 0; i < 8; i++)
-		file.put(0xFF);
+	file.write(reinterpret_cast<char*>(&WAVE_block.loop_beg), sizeof(uint32_t));
+	file.write(reinterpret_cast<char*>(&WAVE_block.loop_end), sizeof(uint32_t));
 	file.write(reinterpret_cast<char*>(&WAVE_block.data_size), sizeof(uint32_t));
 	for (int i = 0; i < 4; i++)
 		file.put(0);
@@ -259,7 +242,7 @@ int ATRAC::save(fstream& file) {
 }
 
 
-void ATRAC::updateOffsets() {
+void libSGD::ATRAC::updateOffsets() {
 	int temp_offset;
 
 	//WAVE
@@ -296,7 +279,7 @@ void ATRAC::updateOffsets() {
 }
 
 
-void ATRAC::setName(string s, bool is_container_name) {
+void libSGD::ATRAC::setName(string s, bool is_container_name) {
 	//If there is no name yet, make both container and subfile name the same to avoid issue I've met when testing stuff
 
 	if (names_amount != 2) {

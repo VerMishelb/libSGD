@@ -2,8 +2,8 @@
 
 using namespace std;
 
-ADPCM::ADPCM() {}
-ADPCM::~ADPCM() {}
+libSGD::ADPCM::ADPCM() {}
+libSGD::ADPCM::~ADPCM() {}
 
-int ADPCM::load() { return 1; }
-int ADPCM::save(std::fstream& file) { return 1; }
+int libSGD::ADPCM::load(std::ifstream& file) { return 1; }
+int libSGD::ADPCM::save(std::fstream& file) { return 1; }

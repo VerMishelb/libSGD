@@ -2,28 +2,11 @@
 
 using namespace std;
 
-SGXD::SGXD() {}
-SGXD::~SGXD() {}
+libSGD::SGXD::SGXD() {}
+libSGD::SGXD::~SGXD() {}
 
 
 //Help functions
-//Find the way to get rid of read_string2() and use read_string() instead
-string read_string2(ifstream& a) {
-	string result;
-	uint8_t t = a.get();
-
-	//Protection from yeeting into space
-	for (int length = 0; t != 0 && length < 0xff; length++) {
-		if (t == '\0') {
-			return result;
-		}
-		result += t;
-		t = a.get();
-	}
-	return result;
-}
-
-
 string hex_int_str(uint32_t a) {
 	std::ostringstream b;
 	b << "0x" << std::hex << std::uppercase << a;
@@ -47,9 +30,8 @@ string short_path(string path) {
 		return path;
 }
 
-
 //Main functions
-int SGXD::load(std::string file) {
+int libSGD::SGXD::load(std::string file) {
 	file_path = file;
 	ifstream sgd(file, ios::binary);
 
@@ -57,6 +39,7 @@ int SGXD::load(std::string file) {
 	if (!sgd)
 	{
 		cout << " ERROR\n";
+		sgd.clear();
 		return ErrorCode::FileCantOpen;
 	}
 	else {
@@ -88,7 +71,7 @@ int SGXD::load(std::string file) {
 
 	//Get container name
 	sgd.seekg(sgd_name_offset);
-	sgd_name = read_string2(sgd);
+	sgd_name = libSGD::read_string(sgd);
 
 	if (type == SGXD::FileType::ATRACType)
 	{
@@ -100,7 +83,7 @@ int SGXD::load(std::string file) {
 	}
 	else if (type == SGXD::FileType::ADPCMType)
 	{
-		adpcm.load();
+		adpcm.load(sgd);
 		//adpcm.WAVE_block.sgd_data_size = data_size;
 	}
 	else
@@ -113,7 +96,7 @@ int SGXD::load(std::string file) {
 }
 
 
-int SGXD::create(SGXD::FileType type_p) {
+int libSGD::SGXD::create(SGXD::FileType type_p) {
 	type = type_p;
 	if (type_p == SGXD::FileType::ATRACType) {
 		atrac.files_amount = 1;
@@ -130,7 +113,7 @@ int SGXD::create(SGXD::FileType type_p) {
 }
 
 
-void SGXD::printInfo() {
+void libSGD::SGXD::printInfo() {
 	cout <<
 		"File: " << short_path(file_path) << '\n' <<
 		"Container name: " << sgd_name << '\n' <<
@@ -158,7 +141,7 @@ void SGXD::printInfo() {
 }
 
 
-int SGXD::save(std::string path) {
+int libSGD::SGXD::save(std::string path) {
 	//SGXD block
 	if (type == 0)
 		data_size = atrac.WAVE_block.sgd_data_size;
@@ -168,6 +151,7 @@ int SGXD::save(std::string path) {
 	if (!file)
 	{
 		cout << "Can't save " << path << '\n';
+		file.clear();
 		return ErrorCode::FileCantOpen;
 	}
 	file.write("SGXD", sizeof(uint32_t));
@@ -188,7 +172,7 @@ int SGXD::save(std::string path) {
 }
 
 
-int SGXD::extract(string path, uint32_t frequency, int file_index, string name) {
+int libSGD::SGXD::extract(string path, uint32_t frequency, int file_index, string name) {
 	//NOTE: File index -1 extracts ALL files, while 0...files_amount-1 extracts corresponding file
 	if (type == ATRACType) {
 		atrac.extract(path, frequency, name);
@@ -197,7 +181,7 @@ int SGXD::extract(string path, uint32_t frequency, int file_index, string name) 
 }
 
 
-void SGXD::setHash(bool val) {
+void libSGD::SGXD::setHash(bool val) {
 	if (type == ATRACType) {
 		atrac.hash_exists = val;
 		updateOffsets();
@@ -209,7 +193,7 @@ void SGXD::setHash(bool val) {
 
 
 //Important stuff
-void SGXD::setContainerName(string s) {
+void libSGD::SGXD::setContainerName(string s) {
 	sgd_name = s;
 	if (type == FileType::ATRACType) {
 		atrac.setName(s, true);
@@ -227,7 +211,7 @@ void SGXD::setContainerName(string s) {
 }
 
 
-void SGXD::updateOffsets() {
+void libSGD::SGXD::updateOffsets() {
 	if (type == 0) {
 		atrac.updateOffsets();
 

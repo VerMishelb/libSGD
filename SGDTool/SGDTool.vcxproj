@@ -98,6 +98,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -115,6 +116,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -154,11 +156,13 @@
   <ItemGroup>
     <ClInclude Include="src\ADPCM.h" />
     <ClInclude Include="src\ATRAC.h" />
+    <ClInclude Include="src\libSGDNamespace.h" />
     <ClInclude Include="src\SGXD.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ADPCM.cpp" />
     <ClCompile Include="src\ATRAC.cpp" />
+    <ClCompile Include="src\libSGDNamespace.cpp" />
     <ClCompile Include="src\SGXD.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
